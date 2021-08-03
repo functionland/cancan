@@ -2,30 +2,12 @@
   "canisters": {
     "CanCan": {
       "main": "service/CanCan.mo"
-    },
-    "cancan_ui": {
-      "dependencies": [
-        "CanCan"
-      ],
-      "frontend": {
-        "entrypoint": "src/index.tsx"
-      },
-      "type": "assets",
-      "source": [
-        "build",
-        "public"
-      ]
     }
   },
   "defaults": {
     "build": {
       "packtool": "vessel sources",
       "output": "build"
-    },
-    "start": {
-      "address": "127.0.0.1",
-      "port": 8000,
-      "serve_root": "build"
     }
   },
   "networks": {
@@ -36,9 +18,9 @@
       "type": "persistent"
     },
     "local": {
-      "bind": "127.0.0.1:8000",
+      "bind": "192.168.68.118:8000",
       "type": "ephemeral"
     }
   },
-  "dfx": "0.7.0"
+  "dfx": "0.7.2"
 }

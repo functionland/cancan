@@ -99,6 +99,7 @@ public type UserAllowances = {
 /// video information provided by front end to service, upon creation.
 public type VideoInit = {
  userId : UserId;
+ externalId: Text;
  name: Text;
  createdAt : Timestamp;
  caption: Text;
@@ -109,6 +110,7 @@ public type VideoInit = {
 /// video information provided by service to front end views -- Pic is separate query
 public type VideoInfo = {
  videoId : VideoId;
+ externalId: Text;
  userId : UserId;
  pic: ?VideoPic;
  createdAt : Timestamp;

@@ -25,6 +25,7 @@ const encodeArrayBuffer = (file) => Array.from(new Uint8Array(file));
 const MAX_CHUNK_SIZE = 1024 * 500; // 500kb
 interface Video {
   userId: string;
+  externalId: string;
   name: string;
   createdAt: number;
   caption: string;
@@ -204,16 +205,19 @@ function generateSeedData() {
 function createVideo(
   userNames: string[],
   videoNames: string[],
+  videoExternalIds: string[],
   captions: string[],
   _tags: string[]
 ): Video {
   const userId = sample(userNames);
+  const externalId = videoExternalIds[INDEX % videoExternalIds.length];
   const name = videoNames[INDEX % videoNames.length];
   const caption = sample(captions);
   const tags = multiSample(_tags);
   const likes = multiSample(userNames);
   return {
     userId,
+	externalId,
     name,
     caption,
     tags,

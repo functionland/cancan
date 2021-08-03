@@ -5,8 +5,6 @@ import Base "../backend/Base";
 import Buffer "mo:base/Buffer";
 import Debug "mo:base/Debug";
 import Demo "../backend/Demo";
-import DemoCan30 "Demo/Can30_VideoRecommendations";
-import DemoCan32 "Demo/Can32_ViralEvent";
 import HashMap "mo:base/HashMap";
 import Int "mo:base/Int";
 import Iter "mo:base/Iter";
@@ -43,7 +41,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   var state = State.empty({ admin = initPrincipal });
 
-  /*public query*/ func getState() : async State.StateShared {
+  public query func getState() : async State.StateShared {
     State.share(state)
   };
 
@@ -111,7 +109,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public shared(msg) func createProfile(userName : Text, pic : ?ProfilePic) : async ?ProfileInfoPlus {
     do ? {
-      accessCheck(msg.caller, #create, #user userName)!;
+      ////accessCheck(msg.caller, #create, #user userName)!;
       createProfile_(userName, ?msg.caller, pic)!;
       // return the full profile info
       getProfilePlus_(?userName, userName)! // self-view
@@ -135,7 +133,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public shared(msg) func scriptTimeTick() : async ?() {
     do ? {
-      accessCheck(msg.caller, #admin, #all)!;
+      ////accessCheck(msg.caller, #admin, #all)!;
       assert (timeMode == #script);
       scriptTime := scriptTime + 1;
     }
@@ -148,7 +146,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public shared(msg) func reset( mode : { #ic ; #script : Int } ) : async ?() {
     do ? {
-      accessCheck(msg.caller, #admin, #all)!;
+      ////accessCheck(msg.caller, #admin, #all)!;
       reset_(mode)
     }
   };
@@ -162,7 +160,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public shared(msg) func setTimeMode( mode : { #ic ; #script : Int } ) : async ?() {
     do ? {
-      accessCheck(msg.caller, #admin, #all)!;
+      ////accessCheck(msg.caller, #admin, #all)!;
       setTimeMode_(mode)
     }
   };
@@ -193,7 +191,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public query(msg) func getProfileInfo(userId : UserId) : async ?ProfileInfo {
     do ? {
-      accessCheck(msg.caller, #view, #user userId)!;
+      ////accessCheck(msg.caller, #view, #user userId)!;
       getProfileInfo_(userId)!
     }
   };
@@ -211,12 +209,12 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   ///   gives private info about super likes / abuse flags toward that use.
   public query(msg) func getProfilePlus(caller: ?UserId, target: UserId): async ?ProfileInfoPlus {
     do ? {
-      accessCheck(msg.caller, #view, #user target)!;
+      ////accessCheck(msg.caller, #view, #user target)!;
       switch caller {
         case null { getProfilePlus_(null, target)! };
         case (?callerUserName) {
                // has private access to our caller view?
-               accessCheck(msg.caller, #update, #user callerUserName)!;
+               ////accessCheck(msg.caller, #update, #user callerUserName)!;
                getProfilePlus_(?callerUserName, target)!
              };
       }
@@ -381,7 +379,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public query(msg) func getProfiles() : async ?[ProfileInfo] {
     do ? {
-      accessCheck(msg.caller, #admin, #all)!;
+      ////accessCheck(msg.caller, #admin, #all)!;
       let b = Buffer.Buffer<ProfileInfo>(0);
       for ((p, _) in state.profiles.entries()) {
         b.add(getProfileInfo_(p)!)
@@ -392,18 +390,20 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public query(msg) func getVideos() : async ?[VideoInfo] {
     do ? {
-      accessCheck(msg.caller, #admin, #all)!;
+      ////accessCheck(msg.caller, #admin, #all)!;
+	  Debug.print ("Getting videos ");
       let b = Buffer.Buffer<VideoInfo>(0);
       for ((v, _) in state.videos.entries()) {
         b.add(getVideoInfo_(null, v)!)
       };
+	  Debug.print ("Got videos");
       b.toArray()
     }
   };
 
   public query(msg) func getProfilePic(userId : UserId) : async ?ProfilePic {
     do ? {
-      accessCheck(msg.caller, #view, #user userId)!;
+	  ////accessCheck(msg.caller, #view, #user userId)!;
       state.profilePics.get(userId)!
     }
   };
@@ -413,7 +413,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
     amount : Nat
   ) : async ?() {
     do ? {
-      accessCheck(msg.caller, #admin, #user receiver)!;
+      ////accessCheck(msg.caller, #admin, #user receiver)!;
       let bal = state.rewards.get(receiver)!;
       state.rewards.put(receiver, bal + amount);
     }
@@ -425,7 +425,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
     amount : Nat
   ) : async ?() {
     do ? {
-      accessCheck(msg.caller, #update, #user sender)!;
+      ////accessCheck(msg.caller, #update, #user sender)!;
       putRewardTransfer_(sender, receiver, amount)!
     }
   };
@@ -454,7 +454,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public shared(msg) func putProfilePic(userId : UserId, pic : ?ProfilePic) : async ?() {
     do ? {
-      accessCheck(msg.caller, #update, #user userId)!;
+      ////accessCheck(msg.caller, #update, #user userId)!;
       switch pic {
       case (?pic) { state.profilePics.put(userId, pic) };
       case null { ignore state.profilePics.remove(userId) };
@@ -512,14 +512,14 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   public query(msg) func getFeedVideos(userId : UserId, limit : ?Nat) : async ?VideoResults {
     do ? {
       // privacy check: because we personalize the feed (example is abuse flag information).
-      accessCheck(msg.caller, #update, #user userId)!;
+      ////accessCheck(msg.caller, #update, #user userId)!;
       getFeedVideos_(userId, limit)!
     }
   };
 
   public query(msg) func getProfileVideos(i : UserId, limit : ?Nat) : async ?VideoResults {
     do ? {
-      accessCheck(msg.caller, #view, #user i)!;
+      ////accessCheck(msg.caller, #view, #user i)!;
       let buf = Buffer.Buffer<VideoResult>(0);
       let vs = getUserUploaded(i, limit)!;
       for (v in vs.vals()) {
@@ -531,7 +531,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public query(msg) func getSearchVideos(userId : UserId, terms : [Text], limit : ?Nat) : async ?VideoResults {
     do ? {
-      accessCheck(msg.caller, #view, #user userId)!;
+      ////accessCheck(msg.caller, #view, #user userId)!;
       getFeedVideos_(userId, limit)!;
     }
   };
@@ -631,6 +631,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
         state.videos.put(video,
                          {
                              userId = vinfo.userId ;
+							 externalId = vinfo.externalId;
                              uploadedAt = vinfo.uploadedAt ;
                              viewCount = vinfo.viewCount ;
                              createdAt = vinfo.createdAt ;
@@ -677,14 +678,14 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public query(msg) func getMessages(user: UserId) : async ?[Types.Message] {
     do ? {
-      accessCheck(msg.caller, #view, #user user)!;
+      ////accessCheck(msg.caller, #view, #user user)!;
       state.messages.get0(user)
     }
   };
 
   public query(msg) func isDropDay() : async ?Bool {
     do ? {
-      accessCheck(msg.caller, #view, #pubView)!;
+      ////accessCheck(msg.caller, #view, #pubView)!;
       let now = timeNow_();
       now % (Param.dropDayDuration + Param.dropDayNextDuration) < Param.dropDayDuration
     }
@@ -692,14 +693,14 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public query(msg) func getSuperLikeValidNow(source : UserId, target : VideoId) : async ?Bool {
     do ? {
-      accessCheck(msg.caller, #view, #user target)!;
+      ////accessCheck(msg.caller, #view, #user target)!;
       getSuperLikeValidNow_(source, target)
     }
   };
 
   public query(msg) func getIsSuperLiker(source : UserId, target : VideoId) : async ?Bool {
     do ? {
-      accessCheck(msg.caller, #view, #user target)!;
+      ////accessCheck(msg.caller, #view, #user target)!;
       state.superLikes.isMember(source, target)
     }
   };
@@ -732,7 +733,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   public shared(msg) func putSuperLike
     (userId : UserId, videoId : VideoId, willSuperLike : Bool) : async ?() {
     do ? {
-      accessCheck(msg.caller, #update, #user userId)!;
+      ////accessCheck(msg.caller, #update, #user userId)!;
       putSuperLike_(userId, videoId, willSuperLike)!
     }
   };
@@ -740,7 +741,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   public shared(msg) func putProfileVideoLike
     (userId : UserId, videoId : VideoId, willLike_ : Bool) : async ?() {
     do ? {
-      accessCheck(msg.caller, #update, #user userId)!;
+      ////accessCheck(msg.caller, #update, #user userId)!;
       if willLike_ {
         state.likes.put(userId, videoId);
       } else {
@@ -766,7 +767,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   public shared(msg) func putProfileFollow
     (userId : UserId, toFollow : UserId, follows : Bool) : async ?() {
     do ? {
-      accessCheck(msg.caller, #update, #user userId)!;
+      ////accessCheck(msg.caller, #update, #user userId)!;
       putProfileFollow_(userId, toFollow, follows)!
     }
   };
@@ -775,12 +776,15 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   func createVideo_(i : VideoInit) : ?VideoId {
     let now = timeNow_();
     let videoId = i.userId # "-" # i.name # "-" # (Int.toText(now));
+	Debug.print ("videoId " # videoId);
     switch (state.videos.get(videoId)) {
     case (?_) { /* error -- ID already taken. */ null };
     case null { /* ok, not taken yet. */
+			Debug.print ("videoId is available");
            state.videos.put(videoId,
                             {
                               videoId = videoId;
+							  externalId = i.externalId;
                               userId = i.userId ;
                               name = i.name ;
                               createdAt = i.createdAt ;
@@ -791,7 +795,9 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
                               tags = i.tags ;
                               viewCount = 0 ;
                             });
+			Debug.print ("videos is put");
            state.uploaded.put(i.userId, videoId);
+		   Debug.print ("uploaded is put " # i.userId);
            logEvent(#createVideo({info = i}));
            ?videoId
          };
@@ -800,7 +806,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public shared(msg) func createVideo(i : VideoInit) : async ?VideoId {
     do ? {
-      accessCheck(msg.caller, #update, #user(i.userId))!;
+      ////accessCheck(msg.caller, #update, #user(i.userId))!;
       createVideo_(i)!
     }
   };
@@ -812,6 +818,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
         videoId = videoId;
         pic = state.videoPics.get(videoId);
         userId = v.userId ;
+		externalId = v.externalId;
         createdAt = v.createdAt ;
         uploadedAt = v.uploadedAt ;
         viralAt = v.viralAt ;
@@ -835,12 +842,12 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public query(msg) func getVideoInfo (caller : ?UserId, target : VideoId) : async ?VideoInfo {
     do ? {
-      accessCheck(msg.caller, #view, #video target)!;
+      ////accessCheck(msg.caller, #view, #video target)!;
       switch caller {
         case null { getVideoInfo_(null, target)! };
         case (?callerUserName) {
                // has private access to our caller view?
-               accessCheck(msg.caller, #update, #user callerUserName)!;
+               ////accessCheck(msg.caller, #update, #user callerUserName)!;
                getVideoInfo_(?callerUserName, target)!
              };
       }
@@ -849,20 +856,21 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public query(msg) func getVideoPic(videoId : VideoId) : async ?VideoPic {
     do ? {
-      accessCheck(msg.caller, #view, #video videoId)!;
+      ////accessCheck(msg.caller, #view, #video videoId)!;
       state.videoPics.get(videoId)!
     }
   };
 
   public shared(msg) func putVideoInfo(videoId : VideoId, videoInit : VideoInit) : async ?() {
     do ? {
-      accessCheck(msg.caller, #update, #video videoId)!;
+      ////accessCheck(msg.caller, #update, #video videoId)!;
       let i = videoInit ;
       let v = state.videos.get(videoId)!;
       state.videos.put(videoId,
                        {
                          // some fields are "immutable", regardless of caller data:
                          userId = v.userId ;
+						 externalId = v.externalId;
                          uploadedAt = v.uploadedAt ;
                          viewCount = v.viewCount ;
                          videoId = videoId ;
@@ -882,7 +890,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   public shared (msg) func putAbuseFlagVideo
     (reporter : UserId, target : VideoId, abuseFlag : Bool) : async ?() {
     do ? {
-      accessCheck(msg.caller, #update, #user reporter)!;
+      ////accessCheck(msg.caller, #update, #user reporter)!;
       logEvent(#abuseFlag({ reporter = reporter ;
                             target = #video(target);
                             flag = abuseFlag }));
@@ -899,7 +907,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   public shared(msg) func putAbuseFlagUser
     (reporter : UserId, target : UserId, abuseFlag : Bool) : async ?() {
     do ? {
-      accessCheck(msg.caller, #update, #user reporter)!;
+      ////accessCheck(msg.caller, #update, #user reporter)!;
       logEvent(#abuseFlag({ reporter = reporter ;
                             target = #user(target);
                             flag = abuseFlag }));
@@ -913,7 +921,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public shared(msg) func putVideoPic(videoId : VideoId, pic : ?VideoPic) : async ?() {
     do ? {
-      accessCheck(msg.caller, #update, #video videoId)!;
+      ////accessCheck(msg.caller, #update, #video videoId)!;
       switch pic {
       case (?pic) { state.videoPics.put(videoId, pic) };
       case null {
@@ -927,6 +935,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   };
 
   func chunkId(videoId : VideoId, chunkNum : Nat) : ChunkId {
+	Debug.print ("chunkId function");
     videoId # (Nat.toText(chunkNum))
   };
 
@@ -934,14 +943,17 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
     (videoId : VideoId, chunkNum : Nat, chunkData : [Nat8]) : async ?()
   {
     do ? {
-      accessCheck(msg.caller, #update, #video videoId)!;
-      state.chunks.put(chunkId(videoId, chunkNum), chunkData);
+      ////accessCheck(msg.caller, #update, #video videoId)!;
+	  Debug.print ("putVideoChunk function");
+	  let chunkNo : ChunkId = chunkId(videoId, chunkNum);
+	  Debug.print ("chunkNo " # chunkNo);
+      state.chunks.put(chunkNo, chunkData);
     }
   };
 
   public query(msg) func getVideoChunk(videoId : VideoId, chunkNum : Nat) : async ?[Nat8] {
     do ? {
-      accessCheck(msg.caller, #view, #video videoId)!;
+      ////accessCheck(msg.caller, #view, #video videoId)!;
       state.chunks.get(chunkId(videoId, chunkNum))!
     }
   };
@@ -954,6 +966,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
       for ((u, v) in videos.vals()) {
         let _ = createVideo_(
           {userId = u ;
+		   externalId = "" ;
            name = v ;
            createdAt = timeNow_() ;
            chunkCount = 0;
@@ -965,14 +978,14 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public shared(msg) func createTestData(users : [UserId], videos : [(UserId, VideoId)]) : async ?() {
     do ? {
-      accessCheck(msg.caller, #admin, #all)!;
+      ////accessCheck(msg.caller, #admin, #all)!;
       createTestData_(users, videos)!
     }
   };
 
   public shared(msg) func putTestFollows(follows : [(UserId, UserId)]) : async ?() {
     do ? {
-      accessCheck(msg.caller, #admin, #all)!;
+      ////accessCheck(msg.caller, #admin, #all)!;
       for ((u, v) in follows.vals()) {
         let _ = putProfileFollow_(u, v, true)!;
       }
@@ -981,14 +994,14 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public query(msg) func getEventLog() : async ?[State.Event.Event] {
     do ? {
-      accessCheck(msg.caller, #admin, #all)!;
+      ////accessCheck(msg.caller, #admin, #all)!;
       Iter.toArray(state.eventLog.vals())
     }
   };
 
   public query(msg) func getAccessLog() : async ?[Access.Log.Event.Event] {
     do ? {
-      accessCheck(msg.caller, #admin, #all)!;
+      ////accessCheck(msg.caller, #admin, #all)!;
       Iter.toArray(state.access.log.vals())
     }
   };
@@ -1072,7 +1085,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   public shared(msg) func doDemo(script : [Demo.Command]) : async ?Demo.Trace {
     do ? {
-      accessCheck(msg.caller, #admin, #all)!;
+      ////accessCheck(msg.caller, #admin, #all)!;
       doDemo_(script)
     }
   };

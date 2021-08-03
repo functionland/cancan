@@ -216,6 +216,7 @@ module {
   /// Video.
   public type Video = {
     userId : Types.UserId;
+	externalId: Text;
     createdAt : Types.Timestamp;
     uploadedAt : Types.Timestamp;
     viralAt: ?Types.Timestamp;
