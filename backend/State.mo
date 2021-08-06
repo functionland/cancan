@@ -45,6 +45,12 @@ module {
       target : Types.VideoId;
       likes : Bool; // false for an "unlike" event
     };
+	
+	public type ShareVideo = {
+      receiver : Types.UserId;
+      target : Types.VideoId;
+      isShared : Bool; // false for an "un-share" event
+    };
 
     public type SuperLikeVideo = {
       source : Types.UserId;
@@ -108,6 +114,7 @@ module {
       #createProfile : CreateProfile;
       #createVideo : CreateVideo;
       #likeVideo : LikeVideo;
+	  #shareVideo : ShareVideo;
       #superLikeVideo : SuperLikeVideo;
       #superLikeVideoFail : SuperLikeVideoFail;
       #rewardPointTransfer : RewardPointTransfer;
@@ -158,6 +165,9 @@ module {
 
     /// likes relation: relates profiles and videos.
     likes : Rel<Types.UserId, Types.VideoId>;
+	
+	/// shared video relation: relates profiles and videos.
+    sharedVideos : Rel<Types.UserId, Types.VideoId>;
 
     /// super likes relation: relates profiles and videos.
     superLikes : Rel<Types.UserId, Types.VideoId>;
@@ -244,6 +254,7 @@ module {
       videoPics = TrieMap.TrieMap<Types.VideoId, Types.VideoPic>(Text.equal, Text.hash);
       follows = RelObj.RelObj(hash, equal);
       likes = RelObj.RelObj(hash, equal);
+	  sharedVideos = RelObj.RelObj(hash, equal);
       superLikes = RelObj.RelObj(hash, equal);
       uploaded = uploaded_;
       eventLog = SeqObj.Seq<Event.Event>(Event.equal, null);

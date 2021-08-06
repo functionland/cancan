@@ -123,6 +123,7 @@ public type VideoInfo = {
  viewCount: Nat;
  name: Text;
  chunkCount: Nat;
+ sharedCount: Nat; // sharedCount counts how many users this is shared with.
  abuseFlagCount: Nat; // abuseFlags counts other users' flags on this profile, for possible blurring.
  /// viewerHasFlagged is
  /// ?true if we (the User requesting this profile) has flagged this profile for abuse.
@@ -177,7 +178,9 @@ public type Service = actor {
 
   getFeedVideos : /*query*/ (userId : UserId, limit : ?Nat) -> async ?VideoResults;
   getProfileVideos : /*query*/ (userId : UserId, limit : ?Nat) -> async ?VideoResults;
+  getSharedVideos : /*query*/ (userId : UserId, limit : ?Nat) -> async ?VideoResults;
   getSearchVideos : query (userId : UserId, terms : [Text], limit : ?Nat) -> async ?VideoResults;
+  getAllUserVideos : query (userId : UserId, limit : ?Nat) -> async ?VideoResults;
 
   putProfileVideoLike : (userId : UserId, videoId : VideoId, likes : Bool) -> async ?();
   putProfileFollow : (userId : UserId, toFollow : UserId, follow : Bool) -> async ?();
@@ -192,6 +195,8 @@ public type Service = actor {
 
   putVideoChunk : (videoId : VideoId, chunkNum : Nat, chunkData : ChunkData) -> async ?();
   getVideoChunk : query (videoId : VideoId, chunkNum : Nat) -> async ?ChunkData;
+  
+  shareVideo : (targetUser : UserId, videoId : VideoId, isShared : Bool) -> async ?VideoId
 
 };
 

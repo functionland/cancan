@@ -847,6 +847,63 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
          };
     }
   };
+  
+  
+  func getUserShared(userId : UserId, limit : ?Nat) : ?VideoResults {
+    do ? {
+      let buf = Buffer.Buffer<VideoResult>(0);
+      for (vid in state.sharedVideos.get0(userId).vals()) {
+        buf.add((getVideoResult vid)!)
+      };
+      buf.toArray()
+    }
+  };
+  
+  public query(msg) func getAllUserVideos(i : UserId, limit : ?Nat) : async ?VideoResults {
+    do ? {
+      accessCheck(msg.caller, #view, #user i)!;
+      let buf = Buffer.Buffer<VideoResult>(0);
+      let vs = getUserUploaded(i, limit)!;
+      for (v in vs.vals()) {
+        buf.add(v)
+      };
+	  let vs2 = getUserShared(i, limit)!;
+      for (v2 in vs2.vals()) {
+        buf.add(v2)
+      };
+      buf.toArray()
+    }
+  };
+  
+  
+  public shared(msg) func shareVideo(targetUser : UserId, videoId : VideoId, willShare_ : Bool) : async ?VideoId {
+    do ? {
+      let _isSelf = accessCheck(msg.caller, #update, #user(targetUser));
+      switch (_isSelf) {
+		case null {
+			//check if has full access to video
+			Debug.print ("checking if is owner");
+			accessCheck(msg.caller, #update, #video videoId)!;
+			Debug.print ("Is owner and can share");
+			//check if targetUser exists
+			accessCheck(msg.caller, #view, #user targetUser)!;
+			Debug.print ("targetUser exists");
+			if willShare_ {
+				state.sharedVideos.put(targetUser, videoId);
+			} else {
+				state.sharedVideos.delete(targetUser, videoId);
+			};
+			//logEvent(#shareVideo({receiver = userId; target = videoId; isShared = willShare_}));
+			videoId
+		};
+		case (?_isSelf) {
+			//Cannot share with oneself
+			Debug.print ("Cannot share with oneself");
+			null!
+		};
+	  }
+    }
+  };
 
   public shared(msg) func createVideo(i : VideoInit) : async ?VideoId {
     do ? {
@@ -876,6 +933,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
         // This implementation makes public all users who flagged every video,
         // but if that information should be kept private, get video info
         // could return just whether the calling user flagged it.
+		sharedCount = state.sharedVideos.get1Size(videoId);
         viewerHasFlagged = do ? {
           state.abuseFlagVideos.isMember(caller!, videoId) ;
         };
