@@ -23,7 +23,7 @@ import Time "mo:base/Time";
 import TrieMap "mo:base/TrieMap";
 import Types "../backend/Types";
 
-shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
+shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = this {
 
   public type ProfileInfo = Types.ProfileInfo;
   public type ProfileInfoPlus = Types.ProfileInfoPlus;
@@ -59,10 +59,13 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   /// null means that the principal is unrecognized,
   /// otherwise, returns a non-empty array of usernames.
   public shared(msg) func getUserNameByPrincipal(p:Principal) : async ?[Text] {
-    if ( msg.caller == p ) {
+    let cid = Principal.fromActor(this);
+    if ( (msg.caller == p) or (cid == msg.caller) ) {
+	  Debug.print("getUserNameByPrincipal: caller equal to p");
       ?state.access.userPrincipal.get1(p)
     } else {
       // access control check fails; do not reveal username of p.
+	  Debug.print("getUserNameByPrincipal: access control check fails");
       null
     }
   };
@@ -82,9 +85,13 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   // must relate one or more principals to it.
   func createProfile_(userName_ : Text, p: ?Principal, pic_ : ?ProfilePic) : ?() {
     switch (state.profiles.get(userName_)) {
-      case (?_) { /* error -- ID already taken. */ null };
+      case (?_) { /* error -- ID already taken. */ 
+	    Debug.print ("ID already taken. " # userName_ );
+	    ?() 
+	  };
       case null { /* ok, not taken yet. */
         let now = timeNow_();
+		Debug.print ("Creating Profile for " # userName_ );
         state.profiles.put(userName_, {
             userName = userName_ ;
             createdAt = now ;
@@ -94,9 +101,15 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
         logEvent(#createProfile({userName=userName_; pic=pic_}));
         state.access.userRole.put(userName_, #user);
         switch p {
-          case null { }; // no related principals, yet.
-          case (?p) { state.access.userPrincipal.put(userName_, p); }
+          case null { 
+		    Debug.print ("No Principal for " # userName_ );
+		  }; // no related principals, yet.
+          case (?p) { 
+		    Debug.print ("Putting Principal for " # userName_ );
+		    state.access.userPrincipal.put(userName_, p); 
+		  }
         };
+		Debug.print ("Created Profile for " # userName_ );
         // success
         ?()
       };
@@ -106,12 +119,39 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
   func accessCheck(caller : Principal, action : Types.UserAction, target : Types.ActionTarget) : ?() {
     state.access.check(timeNow_(), caller, action, target)
   };
+  
+  public shared(msg) func testGetUserNameByPrincipal(p:?Principal) : async () {
+	Debug.print(debug_show(?msg.caller, p));
+	()
+  };
 
   public shared(msg) func createProfile(userName : Text, pic : ?ProfilePic) : async ?ProfileInfoPlus {
     do ? {
       ////accessCheck(msg.caller, #create, #user userName)!;
       createProfile_(userName, ?msg.caller, pic)!;
       // return the full profile info
+	  Debug.print ("Getting full profile for " # userName );
+	  let test = testGetUserNameByPrincipal(?msg.caller);
+	  let callerUsernames : ?[Text] = await getUserNameByPrincipal(msg.caller);
+
+	  switch callerUsernames {
+          case null { 
+		    Debug.print ("Not Found callerUsernames for ");
+		    null! 
+		  }; // no related principals, yet.
+          case (?callerUsernames) { 
+		    let foundUsername = Array.find<Text>(callerUsernames, func x { x == userName });
+			switch foundUsername {
+			  case null { 
+			    Debug.print ("Not Found username for ");
+			    null! 
+			  };
+			  case (?foundUsername) { 
+			    Debug.print ("Found username for " # foundUsername );
+			  }
+			}
+		  }
+      };
       getProfilePlus_(?userName, userName)! // self-view
     }
   };
@@ -357,6 +397,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
 
   func getProfilePlus_(caller: ?UserId, userId: UserId): ?ProfileInfoPlus {
     do ? {
+	  Debug.print("Getting getProfilePlus_ " );
       let profile = state.profiles.get(userId)!;
       {
         userName = profile.userName;
@@ -371,8 +412,11 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ {
           state.abuseFlagUsers.isMember(caller!, userId) ; // check if we are there.
         };
         allowances = do ? { if (caller! == userId) {
+		  Debug.print("Getting allowances " );
           getUserAllowances_(caller!)
-        } else { null! } };
+        } else { 
+		Debug.print("Getting allowances failed " );
+		null! } };
       }
     }
   };
