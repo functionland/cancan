@@ -1,4 +1,4 @@
-# CanCan
+# Photos CanCan
 
 [![Build Status](https://github.com/dfinity/cancan/workflows/CI/badge.svg)](https://github.com/dfinity/cancan/actions)
 
