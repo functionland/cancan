@@ -169,6 +169,8 @@ module {
     /// likes relation: relates profiles and videos.
     likes : Rel<Types.UserId, Types.VideoId>;
 	
+	videoHash : Rel<Types.VideoId, Text>;
+	
 	/// shared video relation: relates profiles and videos.
     sharedVideos : Rel<Types.UserId, Types.VideoId>;
 
@@ -259,6 +261,7 @@ module {
       follows = RelObj.RelObj(hash, equal);
       likes = RelObj.RelObj(hash, equal);
 	  sharedVideos = RelObj.RelObj(hash, equal);
+	  videoHash = RelObj.RelObj(hash, equal);
       superLikes = RelObj.RelObj(hash, equal);
       uploaded = uploaded_;
       eventLog = SeqObj.Seq<Event.Event>(Event.equal, null);

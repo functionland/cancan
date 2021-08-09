@@ -877,9 +877,32 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
     }
   };
   
+  func createVideoHash(caller : ?UserId, videoId : VideoId) : Text {
+	var videoHash : Text = "";
+	let _videoInfo : ?VideoInfo = getVideoInfo_(caller, videoId);
+	switch (_videoInfo) {
+		case null {
+			
+		};
+		case (?_videoInfo){
+			videoHash := videoId;
+		};
+	};
+	videoHash
+  };
   
-  func createVideoHash(videoId : VideoId) : Text {
-    return videoId;
+  func getVideoHash(caller : ?UserId, videoId : VideoId) : Text {
+	var videoHash : Text = "";
+	let alreadyExists : Nat = state.videoHash.get0Size(videoId);
+	if (alreadyExists > 0) {
+		videoHash := state.videoHash.get0(videoId)[0];
+		Debug.print ("found video hash");
+	} else {
+		videoHash := createVideoHash(caller, videoId);
+		state.videoHash.put(videoId, videoHash);
+		Debug.print ("created video hash");
+	};
+    videoHash
   };
   
   public shared(msg) func shareVideo(targetUser : UserId, videoExternalId : Text, willShare_ : Bool) : async ?Text {
@@ -904,9 +927,14 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 					};
 					Debug.print ("targetUser exists");
 					if willShare_ {
-						state.sharedVideos.put(targetUser, videoId);
-						Debug.print ("creating video hash");
-						createVideoHash(videoId)
+						let alreadyExists : Bool = state.sharedVideos.isMember(targetUser, videoId);
+						if (alreadyExists) {
+							
+						} else {
+							state.sharedVideos.put(targetUser, videoId);
+							Debug.print ("creating video hash");
+						};
+						getVideoHash(?targetUser, videoId)
 					} else {
 						state.sharedVideos.delete(targetUser, videoId);
 						""
