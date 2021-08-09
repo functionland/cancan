@@ -19,6 +19,7 @@ import Rel "../backend/Rel";
 import RelObj "../backend/RelObj";
 import State "../backend/State";
 import Text "mo:base/Text";
+import Nat32 "mo:base/Nat32";
 import Time "mo:base/Time";
 import TrieMap "mo:base/TrieMap";
 import Types "../backend/Types";
@@ -885,7 +886,8 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 			
 		};
 		case (?_videoInfo){
-			videoHash := videoId;
+			let Nat32Hash : Nat32 = Text.hash(videoId);
+			videoHash := Nat32.toText(Nat32Hash);
 		};
 	};
 	videoHash
@@ -903,6 +905,40 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 		Debug.print ("created video hash");
 	};
     videoHash
+  };
+  
+  public query(msg) func getVideo(videoExternalId : Text, videoHash : ?Text) : async ?VideoResult {
+	do ? {
+		switch (videoHash) {
+			case null {
+				let videoIdFromExternal = state.vidoesExternalId.get(videoExternalId)!;
+				let isMemberShared : Bool = state.sharedVideos.isMember(Principal.toText(msg.caller), videoIdFromExternal);
+				if (isMemberShared){
+					getVideoResult(videoIdFromExternal)!
+				} else {
+					null!
+				};
+			};
+			case (?videoHash){
+				var isShared : Bool = false;
+				let videoIdFromHash = state.videoHash.get1(videoHash)[0];
+				let isLinkShared = state.sharedVideos.isMember("", videoIdFromHash);
+				if (isLinkShared){
+					isShared := true;
+				} else {
+					let isMemberShared = state.sharedVideos.isMember(Principal.toText(msg.caller), videoIdFromHash);
+					if (isMemberShared){
+						isShared := true;
+					};
+				};
+				if(isShared) {
+					getVideoResult(videoIdFromHash)!
+				} else {
+					null!
+				}
+			};
+		}
+	}
   };
   
   public shared(msg) func shareVideo(targetUser : UserId, videoExternalId : Text, willShare_ : Bool) : async ?Text {

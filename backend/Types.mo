@@ -181,6 +181,7 @@ public type Service = actor {
   getSharedVideos : /*query*/ (userId : UserId, limit : ?Nat) -> async ?VideoResults;
   getSearchVideos : query (userId : UserId, terms : [Text], limit : ?Nat) -> async ?VideoResults;
   getAllUserVideos : query (userId : UserId, limit : ?Nat) -> async ?VideoResults;
+  getVideo : /*query*/ (videoExternalId : Text, videoHash : ?Text) -> async ?VideoResults;
 
   putProfileVideoLike : (userId : UserId, videoId : VideoId, likes : Bool) -> async ?();
   putProfileFollow : (userId : UserId, toFollow : UserId, follow : Bool) -> async ?();
