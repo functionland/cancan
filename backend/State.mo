@@ -156,6 +156,9 @@ module {
 
     /// all videos.
     videos : Map<Types.VideoId, Video>;
+	
+	/// relationship between external ids and video ids.
+    vidoesExternalId : Map<Text, Types.VideoId>;
 
     /// all video pictures (aka thumbnails).
     videoPics : Map<Types.VideoId, Types.VideoPic>;
@@ -251,6 +254,7 @@ module {
       chunks = TrieMap.TrieMap<ChunkId, ChunkData>(Text.equal, Text.hash);
       profilePics = TrieMap.TrieMap<Types.UserId, Types.ProfilePic>(Text.equal, Text.hash);
       videos = TrieMap.TrieMap<Types.VideoId, Video>(Text.equal, Text.hash);
+	  vidoesExternalId = TrieMap.TrieMap<Text, Types.VideoId>(Text.equal, Text.hash);
       videoPics = TrieMap.TrieMap<Types.VideoId, Types.VideoPic>(Text.equal, Text.hash);
       follows = RelObj.RelObj(hash, equal);
       likes = RelObj.RelObj(hash, equal);

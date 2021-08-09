@@ -672,6 +672,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
     };
 
     if(superLikers.size() >= Param.superLikeViralThreshold) {
+		state.vidoesExternalId.put(vinfo.externalId, video);
         state.videos.put(video,
                          {
                              userId = vinfo.userId ;
@@ -825,7 +826,8 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
     case (?_) { /* error -- ID already taken. */ null };
     case null { /* ok, not taken yet. */
 			Debug.print ("videoId is available");
-           state.videos.put(videoId,
+			state.vidoesExternalId.put(i.externalId, videoId);
+            state.videos.put(videoId,
                             {
                               videoId = videoId;
 							  externalId = i.externalId;
@@ -876,25 +878,43 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
   };
   
   
-  public shared(msg) func shareVideo(targetUser : UserId, videoId : VideoId, willShare_ : Bool) : async ?VideoId {
+  func createVideoHash(videoId : VideoId) : Text {
+    return videoId;
+  };
+  
+  public shared(msg) func shareVideo(targetUser : UserId, videoExternalId : Text, willShare_ : Bool) : async ?Text {
     do ? {
-      let _isSelf = accessCheck(msg.caller, #update, #user(targetUser));
+	  let _isSelf = accessCheck(msg.caller, #update, #user(targetUser));
       switch (_isSelf) {
 		case null {
-			//check if has full access to video
-			Debug.print ("checking if is owner");
-			accessCheck(msg.caller, #update, #video videoId)!;
-			Debug.print ("Is owner and can share");
-			//check if targetUser exists
-			accessCheck(msg.caller, #view, #user targetUser)!;
-			Debug.print ("targetUser exists");
-			if willShare_ {
-				state.sharedVideos.put(targetUser, videoId);
-			} else {
-				state.sharedVideos.delete(targetUser, videoId);
-			};
+			let videoId = state.vidoesExternalId.get(videoExternalId);
+			switch (videoId) {
+				case null {
+					""
+				};
+				case (?videoId) {
+					Debug.print ("videoId is found " # videoId);
+					//check if has full access to video
+					Debug.print ("checking if is owner");
+					accessCheck(msg.caller, #update, #video videoId)!;
+					Debug.print ("Is owner and can share");
+					//check if targetUser exists
+					if (targetUser != "") {
+					  accessCheck(msg.caller, #view, #user targetUser)!;
+					};
+					Debug.print ("targetUser exists");
+					if willShare_ {
+						state.sharedVideos.put(targetUser, videoId);
+						Debug.print ("creating video hash");
+						createVideoHash(videoId)
+					} else {
+						state.sharedVideos.delete(targetUser, videoId);
+						""
+					};
+				};
+			}
+			
 			//logEvent(#shareVideo({receiver = userId; target = videoId; isShared = willShare_}));
-			videoId
 		};
 		case (?_isSelf) {
 			//Cannot share with oneself
@@ -968,6 +988,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
       accessCheck(msg.caller, #update, #video videoId)!;
       let i = videoInit ;
       let v = state.videos.get(videoId)!;
+	  state.vidoesExternalId.put(v.externalId, videoId);
       state.videos.put(videoId,
                        {
                          // some fields are "immutable", regardless of caller data:
