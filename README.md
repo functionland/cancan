@@ -2,10 +2,14 @@
 
 [![Build Status](https://github.com/dfinity/cancan/workflows/CI/badge.svg)](https://github.com/dfinity/cancan/actions)
 
-This is a modified fork of CanCan project that serves as a private backend for Photos backend on Dfinity network. We kept it as aligned as possible with CanCan project, however, unlike CanCan it is not a public video sharing platform and support features such as:
+> This is a modified fork of CanCan project that serves as a private backend for Photos backend on Dfinity network. We kept it as aligned as possible with CanCan project, however, unlike CanCan it is not a public video sharing platform and support features such as:
+> 
 1- Private repo of photos
+
 2- File sharing using a unique hash
+
 3- File sharing with other users on the same backend
+
 4- Front-end to view files by their hash (for sharing purposes)
 
 ## Installation
