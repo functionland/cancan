@@ -1,7 +1,7 @@
 import React from "react";
 import { CSSTransition } from "react-transition-group";
 import { getUserFromCanister } from "../utils";
-import { Media } from "../views/Media";
+import { Shared } from "../views/Shared";
 import { DropDayNotification } from "./DropDayNotification";
 import { RewardShowerNotification } from "./RewardShowerNotification";
 import { MainNav } from "./MainNav";
@@ -37,9 +37,9 @@ export function SingleImage({
 
   const privateRoutes = [
     {
-      path: "/Media/:videoHash",
+      path: "/Shared/:videoHash",
       render: ({ match }) => (
-        <Media currentUser={user} />
+        <Shared currentUser={user} />
       ),
     },
   ];

@@ -11,7 +11,7 @@ type SharedByHashParams = {
 /*
  * Nothing fancy here, either!
  */
-export function Feed({
+export function Shared({
   profileInfo,
   onRefreshUser,
 }: {
