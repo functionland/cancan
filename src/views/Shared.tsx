@@ -12,11 +12,9 @@ type SharedByHashParams = {
  * Nothing fancy here, either!
  */
 export function Shared({
-  profileInfo,
-  onRefreshUser,
+  currentUser,
 }: {
-  profileInfo?: ProfileInfoPlus;
-  onRefreshUser: any;
+  currentUser?: ProfileInfoPlus;
 }) {
   const [feed, setFeed] = useState<VideoInfo[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,7 +48,8 @@ export function Shared({
             <Video
               key={v.videoId}
               videoInfo={v}
-              onRefreshUser={onRefreshUser}
+              userId={currentUser?.userName || ""}
+              userRewardPoints={Number(currentUser?.rewards.toString()) || 0}
             />
           ))}
       </div>

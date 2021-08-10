@@ -6,6 +6,7 @@ import { Discover } from "../views/Discover";
 import { Upload } from "./Upload";
 import { Rewards } from "../views/Rewards";
 import { Profile } from "../views/Profile";
+import { Shared } from "../views/Shared";
 import { DropDayNotification } from "./DropDayNotification";
 import { RewardShowerNotification } from "./RewardShowerNotification";
 import { MainNav } from "./MainNav";
@@ -32,7 +33,7 @@ export function PrivateRoutes({
   logOut,
 }) {
   function refreshProfileInfo() {
-    getUserFromCanister(user?.userName!).then((user) => {
+    getUserFromCanister(user?.userName).then((user) => {
       if (user) {
         setUser(user);
       }
@@ -62,16 +63,23 @@ export function PrivateRoutes({
         <Profile key={match?.params.userId} currentUser={user} />
       ),
     },
+    {
+      path: "/Shared/:videoHash",
+      render: ({ match }) => (
+        <Shared currentUser={user} />
+      ),
+    }
   ];
   const privatePaths = privateRoutes.map(({ path }) => path);
 
   return (
     <Route path={privatePaths}>
-      {isAuthenticated && user ? (
+      {(isAuthenticated && user) || (true) ? (
         <>
-          <DropDayNotification />
-          <RewardShowerNotification currentUser={user} />
-          <MainNav paths={privatePaths} />
+
+            <DropDayNotification />
+            <RewardShowerNotification currentUser={user} />
+            <MainNav paths={privatePaths} />
 
           <Switch location={location}>
             {privateRoutes.map(({ path, render }) => (

@@ -42,23 +42,25 @@ export function RewardShowerNotification(props: RewardShowerProps) {
 
   // Checks the user's events and pulls out any reward points for unread messages
   function checkForNewMessages() {
-    getMessages(props.currentUser.userName).then((messages) => {
-      const unreadMessages = messages.filter(unreadMessagesFilter);
-      if (unreadMessages.length === 0) return;
-      const rewardPoints = unreadMessages.reduce(rewardPointsReducer, 0);
-      if (rewardPoints > 0) {
-        setRewards(rewardPoints);
-        // Clear the animation after 5 seconds, the duration of the animation
-        setTimeout(clearMessages, 5000);
-      }
-      if (unreadMessages) {
-        setDismissed(false);
-        localStorage.setItem(
-          KEY_LOCALSTORAGE_READ_MESSAGES_TIME,
-          (Date.now() * 1000 * 1000).toString()
-        );
-      }
-    });
+    if(props.currentUser){
+      getMessages(props.currentUser.userName).then((messages) => {
+        const unreadMessages = messages.filter(unreadMessagesFilter);
+        if (unreadMessages.length === 0) return;
+        const rewardPoints = unreadMessages.reduce(rewardPointsReducer, 0);
+        if (rewardPoints > 0) {
+          setRewards(rewardPoints);
+          // Clear the animation after 5 seconds, the duration of the animation
+          setTimeout(clearMessages, 5000);
+        }
+        if (unreadMessages) {
+          setDismissed(false);
+          localStorage.setItem(
+            KEY_LOCALSTORAGE_READ_MESSAGES_TIME,
+            (Date.now() * 1000 * 1000).toString()
+          );
+        }
+      });
+    }
   }
 
   // Clear the reward point shower notification

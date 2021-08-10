@@ -10,7 +10,6 @@ import { SignIn } from "./views/SignIn";
 import { SignUp } from "./components/SignUp";
 import { useAuth } from "./utils";
 import { PrivateRoutes } from "./components/PrivateRoutes";
-import { SingleImage } from "./components/SingleImage";
 
 function wrapRouteWithFade(Component) {
   return ({ match }) => (
@@ -42,20 +41,6 @@ export function AppRouter() {
             ) : (
               <Redirect to={{ pathname: "/sign-in" }} />
             ))}
-        </Route>
-
-        <Route path="/get-media/">
-        {({ videoHash }) => (
-            <TransitionGroup>
-              <SingleImage
-                videoHash={videoHash}
-                user={user}
-                isAuthenticated={isAuthenticated}
-                setUser={setUser}
-                logOut={logOut}
-              />
-            </TransitionGroup>
-          )}
         </Route>
 
         <Route path="*">

@@ -5,8 +5,8 @@ import { Video } from "../components/Video";
 import { LoadingIndicator } from "../components/LoadingIndicator";
 import { ProfileInfoPlus, VideoInfo } from "../utils/canister/typings";
 
-type ProfileByIdParams = {
-  userId: string;
+type MediaByIdParams = {
+  videoHash: string;
 };
 /*
  * Nothing fancy here, either!
@@ -18,7 +18,7 @@ export function Media({
 }) {
   const [media, setMedia] = useState<VideoInfo>();
   const [isLoading, setIsLoading] = useState(false);
-  const { videoHash } = useParams<ProfileByIdParams>();
+  const { videoHash } = useParams<MediaByIdParams>();
 
   useEffect(() => {
     if (videoHash) {
