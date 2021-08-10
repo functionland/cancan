@@ -173,6 +173,10 @@ export default interface _SERVICE {
     arg_0: UserId_3,
     arg_1: [] | [BigInt]
   ) => Promise<[] | [VideoResults]>;
+  getVideo : (arg_0: [] | [string], arg_1: [] | [string]) => Promise<
+      [] | [VideoResult]
+  >;
+  getSharedVideos : (arg_0: [] | [string]) => Promise<[] | [VideoResults]>;
   getIsSuperLiker: (
     arg_0: UserId_3,
     arg_1: VideoId_3

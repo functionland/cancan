@@ -907,17 +907,63 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
     videoHash
   };
   
-  public query(msg) func getVideo(videoExternalId : Text, videoHash : ?Text) : async ?VideoResult {
+  public query(msg) func getSharedVideos(videoHash : ?Text) : async ?VideoResults {
+	do ? {
+		let vids = HashMap.HashMap<Text, ()>(0, Text.equal, Text.hash);
+		let buf = Buffer.Buffer<VideoResult>(0);
+		switch (videoHash) {
+			case null {
+				//TODO: get videos that are shared with user specifically here 
+				null!
+			};
+			case (?videoHash){
+				let videoIdsFromHash = state.videoHash.get1(videoHash);
+				
+				for (vidId in videoIdsFromHash.vals()) {
+					if (vids.get(vidId) == null) {
+						var isShared : Bool = false;
+						let isLinkShared = state.sharedVideos.isMember("", vidId);
+						if (isLinkShared){
+							isShared := true;
+						} else {
+							let isMemberShared = state.sharedVideos.isMember(Principal.toText(msg.caller), vidId);
+							if (isMemberShared){
+								isShared := true;
+							};
+						};
+						if(isShared) {
+							vids.put(vidId, ());
+							let vPic = state.videoPics.get(vidId);
+							let vi = getVideoInfo_(null, vidId)!;
+							buf.add((vi, vPic));
+						};
+					};
+				};
+			};
+		};
+		buf.toArray()
+	}
+  };
+  
+  
+  public query(msg) func getVideo(videoExternalId : ?Text, videoHash : ?Text) : async ?VideoResult {
 	do ? {
 		switch (videoHash) {
 			case null {
-				let videoIdFromExternal = state.vidoesExternalId.get(videoExternalId)!;
-				let isMemberShared : Bool = state.sharedVideos.isMember(Principal.toText(msg.caller), videoIdFromExternal);
-				if (isMemberShared){
-					getVideoResult(videoIdFromExternal)!
-				} else {
-					null!
-				};
+				switch (videoExternalId) {
+					case null {
+						null!
+					};
+					case (?videoExternalId){
+						let videoIdFromExternal = state.vidoesExternalId.get(videoExternalId)!;
+						let isMemberShared : Bool = state.sharedVideos.isMember(Principal.toText(msg.caller), videoIdFromExternal);
+						if (isMemberShared){
+							getVideoResult(videoIdFromExternal)!
+						} else {
+							null!
+						};
+					};
+				}
 			};
 			case (?videoHash){
 				var isShared : Bool = false;
@@ -935,9 +981,9 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 					getVideoResult(videoIdFromHash)!
 				} else {
 					null!
-				}
+				};
 			};
-		}
+		};
 	}
   };
   

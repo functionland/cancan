@@ -10,6 +10,7 @@ import { SignIn } from "./views/SignIn";
 import { SignUp } from "./components/SignUp";
 import { useAuth } from "./utils";
 import { PrivateRoutes } from "./components/PrivateRoutes";
+import { SingleImage } from "./components/SingleImage";
 
 function wrapRouteWithFade(Component) {
   return ({ match }) => (
@@ -30,7 +31,7 @@ export function AppRouter() {
   return (
     <Router>
       <Switch>
-        {/* Root route, decides whether to redirect someone to feed, signup,
+        {/* Root route, decides whether to redirect someone to feed, signUp,
             or authorize, based on app state, only when auth client is ready */}
         <Route exact path="/">
           {isAuthReady &&
@@ -41,6 +42,20 @@ export function AppRouter() {
             ) : (
               <Redirect to={{ pathname: "/sign-in" }} />
             ))}
+        </Route>
+
+        <Route path="/get-media/">
+        {({ videoHash }) => (
+            <TransitionGroup>
+              <SingleImage
+                videoHash={videoHash}
+                user={user}
+                isAuthenticated={isAuthenticated}
+                setUser={setUser}
+                logOut={logOut}
+              />
+            </TransitionGroup>
+          )}
         </Route>
 
         <Route path="*">

@@ -13,6 +13,7 @@ import {
   VideoInfo,
   VideoInit,
   VideoResults,
+  VideoResult,
 } from "./canister/typings";
 import { unwrap } from "./index";
 import { actorController } from "./canister/actor";
@@ -81,7 +82,7 @@ export async function findOrCreateUser(
     } catch (error) {
       return Promise.reject(error);
     }
-    throw Error("couldnt find or create user");
+    throw Error("couldn't find or create user");
   }
 }
 
@@ -128,6 +129,33 @@ export async function getFeedVideos(userId: string): Promise<VideoInfo[]> {
     return unwrappedVideos;
   } else {
     return Promise.resolve([]);
+  }
+}
+
+export async function getSharedVideos(videoHash: string): Promise<VideoInfo[]> {
+  const videos = unwrap<VideoResults>(
+    await (await CanCan.actor).getSharedVideos([videoHash])
+  );
+  if (videos !== null) {
+    const unwrappedVideos = videos.map((v) => v[0]);
+    return unwrappedVideos;
+  } else {
+    return Promise.resolve([]);
+  }
+}
+
+export async function getVideo(videoExternalId : string, videoHash : string): Promise<VideoInfo|null> {
+  const videoResult = await (await CanCan.actor).getVideo([videoExternalId], [videoHash]);
+  let video:(VideoResult | null) = null;
+  if(videoResult){
+  video = unwrap<VideoResult>(
+    videoResult
+  );
+  }
+  if (video !== null) {
+    return video[0];
+  } else {
+    return Promise.resolve(null);
   }
 }
 
