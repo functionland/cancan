@@ -909,6 +909,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
   
   public query(msg) func getSharedVideos(videoHash : ?Text) : async ?VideoResults {
 	do ? {
+		Debug.print("Getting shared videos");
 		let vids = HashMap.HashMap<Text, ()>(0, Text.equal, Text.hash);
 		let buf = Buffer.Buffer<VideoResult>(0);
 		switch (videoHash) {
@@ -917,6 +918,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 				null!
 			};
 			case (?videoHash){
+				Debug.print("Getting shared videos from hash");
 				let videoIdsFromHash = state.videoHash.get1(videoHash);
 				
 				for (vidId in videoIdsFromHash.vals()) {
@@ -939,6 +941,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 						};
 					};
 				};
+				Debug.print("Got shared videos from hash");
 			};
 		};
 		buf.toArray()
