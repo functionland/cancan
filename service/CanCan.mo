@@ -918,9 +918,9 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 				null!
 			};
 			case (?videoHash){
-				Debug.print("Getting shared videos from hash");
+				Debug.print("Getting shared videos from hash " # videoHash);
 				let videoIdsFromHash = state.videoHash.get1(videoHash);
-				
+				Debug.print(debug_show(videoIdsFromHash));
 				for (vidId in videoIdsFromHash.vals()) {
 					if (vids.get(vidId) == null) {
 						var isShared : Bool = false;
@@ -1171,7 +1171,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
   };
 
   func chunkId(videoId : VideoId, chunkNum : Nat) : ChunkId {
-	Debug.print ("chunkId function");
+	Debug.print ("chunkId function ");
     videoId # (Nat.toText(chunkNum))
   };
 
@@ -1187,10 +1187,28 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
     }
   };
 
-  public query(msg) func getVideoChunk(videoId : VideoId, chunkNum : Nat) : async ?[Nat8] {
+  public query(msg) func getVideoChunk(videoId : VideoId, chunkNum : Nat, videoHash : ?Text) : async ?[Nat8] {
     do ? {
-      accessCheck(msg.caller, #view, #video videoId)!;
-      state.chunks.get(chunkId(videoId, chunkNum))!
+		switch (videoHash) {
+			case null {
+				accessCheck(msg.caller, #view, #video videoId)!;
+				state.chunks.get(chunkId(videoId, chunkNum))!
+			};
+			case (?videoHash) {
+				Debug.print("checking video Hash" # videoHash);
+				let isMember :Bool = state.videoHash.isMember(videoId, videoHash);
+				if (isMember) {
+					Debug.print(debug_show("videoHash verified. Getting chunks", chunkNum, videoId));
+					let createdChunkId : ChunkId = chunkId(videoId, chunkNum);
+					Debug.print(debug_show(createdChunkId));
+					let chunkData : ChunkData = state.chunks.get(createdChunkId)!;
+					Debug.print("got chunk data");
+					chunkData
+				} else {
+					null!
+				};
+			};
+		};
     }
   };
 

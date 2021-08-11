@@ -17,6 +17,7 @@ import {
 } from "./canister/typings";
 import { unwrap } from "./index";
 import { actorController } from "./canister/actor";
+import mime from 'mime-types';
 
 const CanCan = actorController;
 
@@ -133,9 +134,16 @@ export async function getFeedVideos(userId: string): Promise<VideoInfo[]> {
 }
 
 export async function getSharedVideos(videoHash: string): Promise<VideoInfo[]> {
+  console.log('getting shared videos from canister');
+  const canisterActor = await CanCan.actor;
+  console.log('created actor');
+  const canisterResponse = await canisterActor.getSharedVideos([videoHash]);
+  console.log(canisterResponse);
   const videos = unwrap<VideoResults>(
-    await (await CanCan.actor).getSharedVideos([videoHash])
+    canisterResponse
   );
+  console.log('unwrapped response');
+  console.log(videos);
   if (videos !== null) {
     const unwrappedVideos = videos.map((v) => v[0]);
     return unwrappedVideos;
@@ -222,24 +230,47 @@ export async function superLike(
 }
 
 // Videos are stored as chunked byteArrays, and must be assembled once received
-export async function getVideoChunks(videoInfo: VideoInfo): Promise<string> {
-  const { videoId, chunkCount } = videoInfo;
+export async function getVideoChunks(videoInfo: VideoInfo, videoHash:[string]|[] = []): Promise<string> {
+  const { videoId, chunkCount, name } = videoInfo;
   const chunkBuffers: Buffer[] = [];
   const chunksAsPromises: Array<Promise<Optional<number[]>>> = [];
+  console.log('getting video chunks');
+  console.log(videoId);
+  console.log(videoHash);
+
   for (let i = 1; i <= Number(chunkCount.toString()); i++) {
-    chunksAsPromises.push((await CanCan.actor).getVideoChunk(videoId, i));
+    console.log('getting chunk no '+i);
+    chunksAsPromises.push((await CanCan.actor).getVideoChunk(videoId, i, videoHash));
   }
   const nestedBytes: number[][] = (await Promise.all(chunksAsPromises))
     .map(unwrap)
     .filter((v): v is number[] => v !== null);
+  console.log('nestedBytes created');
+
   nestedBytes.forEach((bytes) => {
     const bytesAsBuffer = Buffer.from(new Uint8Array(bytes));
     chunkBuffers.push(bytesAsBuffer);
   });
+  console.log('created bytesAsBuffer '+mime.lookup(name));
+
   const videoBlob = new Blob([Buffer.concat(chunkBuffers)], {
-    type: "video/mp4",
+    type: mime.lookup(name),
   });
-  const vidURL = URL.createObjectURL(videoBlob);
+  console.log('created videoBlob');
+
+ /* var base64data:string = "";
+  var reader = new FileReader();
+  reader.readAsDataURL(videoBlob); 
+  reader.onloadend = function() {
+      base64data = reader.result;                
+      console.log(base64data);
+  }
+  const vidURL = base64data;*/
+  
+
+  const vidURL = window.URL.createObjectURL(videoBlob);
+  
+  console.log('created url: '+vidURL);
   return vidURL;
 }
 

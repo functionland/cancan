@@ -11,6 +11,7 @@ import likeIcon from "../assets/images/icon-like.png";
 import commentIcon from "../assets/images/icon-comment.png";
 import shareIcon from "../assets/images/icon-share.png";
 import "./Video.scss";
+import mime from 'mime-types';
 
 // The amount of flags a video needs before we blur it out on frontend
 const VIDEO_BLUR_MIN = 1;
@@ -22,6 +23,7 @@ interface VideoProps {
   onRefreshUser?: any;
   isPreview?: boolean;
   onClose?: () => void;
+  videoHash?: string|null;
 }
 
 // Wrapper to allow us to use the same video component for single previews from
@@ -33,6 +35,7 @@ export function Video(props: VideoProps) {
     userRewardPoints,
     onRefreshUser,
     videoInfo,
+    videoHash,
     onClose = () => {},
   } = props;
   return isPreview ? (
@@ -43,6 +46,7 @@ export function Video(props: VideoProps) {
         userRewardPoints={userRewardPoints}
         videoInfo={videoInfo}
         onClose={onClose}
+        videoHash={videoHash}
       />
     </div>
   ) : (
@@ -52,6 +56,7 @@ export function Video(props: VideoProps) {
       onRefreshUser={onRefreshUser}
       videoInfo={videoInfo}
       onClose={onClose}
+      videoHash={videoHash}
     />
   );
 }
@@ -64,8 +69,10 @@ function VideoBase(props: VideoProps) {
     isPreview = false,
     onRefreshUser = () => {},
     onClose = () => {},
+    videoHash = null,
   } = props;
   const [play, setPlay] = useState(false);
+  const [fileType, setFileType] = useState<string>();
   const [videoSourceURL, setVideoSourceURL] = useState<string>();
   const [userPic, setUserPic] = useState<string>();
   const [userLikes, setUserLikes] = useState(videoInfo.likes.includes(userId));
@@ -78,7 +85,9 @@ function VideoBase(props: VideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handlePlayClick = function () {
-    setPlay(!play);
+    if(fileType==='video'){
+      setPlay(!play);
+    }
   };
 
   // Load video and uploader profilePic on first mount.
@@ -86,23 +95,31 @@ function VideoBase(props: VideoProps) {
     if (!videoInfo) {
       return;
     }
-    getVideoChunks(videoInfo).then((blobURL) => {
-      setVideoSourceURL(blobURL);
-      setPlay(true);
-    });
-    getProfilePic(videoInfo.userId).then((bytes) => {
-      if (!bytes) {
-        return;
+    getVideoChunks(videoInfo, videoHash?[videoHash]:[]).then((blobURL) => {
+      console.log(blobURL);
+      let mimeType = mime.lookup(videoInfo?.name);
+      if(mimeType){
+        const fileType_t = mimeType.split('/')[0];
+        if(fileType_t){
+          setFileType(fileType_t);
+        }
       }
-      const picBlob = new Blob([Buffer.from(new Uint8Array(bytes))], {
-        type: "image/jpeg",
-      });
-      const pic = URL.createObjectURL(picBlob);
-      setUserPic(pic);
+      setVideoSourceURL(blobURL);
+      //setPlay(true);
     });
 
-    return () => videoRef.current?.pause();
+    return () => {
+      //videoRef.current?.pause();
+    }
   }, [videoInfo?.videoId]);
+
+  useEffect(()=>{
+    return () => {
+      if(videoSourceURL){
+        URL.revokeObjectURL(videoSourceURL);
+      }
+    }
+  }, [videoSourceURL])
 
   // Only play video if it has not been flagged/reported
   useEffect(() => {
@@ -136,15 +153,24 @@ function VideoBase(props: VideoProps) {
           aria-label="close preview"
         />
       )}
-      <video
-        onClick={handlePlayClick}
-        ref={videoRef}
-        src={videoSourceURL}
-        loop={true}
-        muted={true}
-        autoPlay={false}
-        style={videoBlurStyle}
-      />
+      {(fileType==='video') ? (
+        <video
+          onClick={handlePlayClick}
+          ref={videoRef}
+          src={videoSourceURL}
+          loop={true}
+          muted={true}
+          autoPlay={false}
+          style={videoBlurStyle}
+        />
+        ) : (
+          <img
+            alt=""
+            src={videoSourceURL}
+            style={videoBlurStyle}
+          />
+        )
+      }
       <div className="user-details">
         <ProfilePic name={videoInfo.userId} profilePic={userPic} />
         <div style={{ position: "relative" }}>

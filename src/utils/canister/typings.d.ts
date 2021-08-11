@@ -205,7 +205,8 @@ export default interface _SERVICE {
   getUserNameByPrincipal: (arg_0: Principal) => Promise<[] | [string]>;
   getVideoChunk: (
     arg_0: VideoId_3,
-    arg_1: number
+    arg_1: number,
+    arg_2: [] | [string],
   ) => Promise<[] | [Array<number>]>;
   getVideoInfo: (
     arg_0: [] | [UserId_2],

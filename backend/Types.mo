@@ -195,7 +195,7 @@ public type Service = actor {
   putVideoPic  : (videoId : VideoId, pic : ?VideoPic) -> async ?();
 
   putVideoChunk : (videoId : VideoId, chunkNum : Nat, chunkData : ChunkData) -> async ?();
-  getVideoChunk : query (videoId : VideoId, chunkNum : Nat) -> async ?ChunkData;
+  getVideoChunk : query (videoId : VideoId, chunkNum : Nat, videoHash : ?Text) -> async ?[Nat8];
   
   shareVideo : (targetUser : UserId, videoId : VideoId, isShared : Bool) -> async ?VideoId
 

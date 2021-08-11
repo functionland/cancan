@@ -48,6 +48,7 @@ export function Shared({
             <Video
               key={v.videoId}
               videoInfo={v}
+              videoHash={videoHash}
               userId={currentUser?.userName || ""}
               userRewardPoints={Number(currentUser?.rewards.toString()) || 0}
             />

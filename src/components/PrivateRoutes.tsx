@@ -76,17 +76,22 @@ export function PrivateRoutes({
     <Route path={privatePaths}>
       {(isAuthenticated && user) || (true) ? (
         <>
-
-            <DropDayNotification />
-            <RewardShowerNotification currentUser={user} />
-            <MainNav paths={privatePaths} />
+          {
+            (isAuthenticated && user) ? (
+              <>
+              <DropDayNotification />
+              <RewardShowerNotification currentUser={user} />
+              <MainNav paths={privatePaths} />
+              </>
+            ):(<></>)
+          }
 
           <Switch location={location}>
-            {privateRoutes.map(({ path, render }) => (
+            {privateRoutes.map(({ path, render }) => {console.log(path);return (
               <Route key={path} path={path}>
                 {wrapPrivateRouteWithSlide(render)}
               </Route>
-            ))}
+            )})}
           </Switch>
         </>
       ) : (
