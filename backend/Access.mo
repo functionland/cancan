@@ -146,7 +146,7 @@ module {
              };
         case (#user) {
                switch userAction_ {
-                 case (#view) { ?() };
+                 case (#view) { ?() }; //TODO: Check view permission of video based on video ownership and sharing
                  case (#create) { ?() };
                  case (#admin) { null };
                  case (#update) {
