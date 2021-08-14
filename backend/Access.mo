@@ -146,7 +146,30 @@ module {
              };
         case (#user) {
                switch userAction_ {
-                 case (#view) { ?() }; //TODO: Check view permission of video based on video ownership and sharing
+                 case (#view) { 
+				   switch actionTarget_ {
+					 case (#video v) {
+					   let users = init.uploaded.get1(v);
+					   switch (users.size()) {
+                         case 1 {
+						   if (userPrincipal.isMember(users[0], caller_)) {
+						     //user is the uploader and has full access
+                             ?()
+                           } else { 
+						     //TODO: check if video is shared with this user
+						     ?() 
+						   } 
+						 };
+                         // invariant: exactly only one video uploader per video.
+                         case _ { assert false; null };
+                       };
+					 };
+					 case (_) {
+					   ?()
+					 };
+				   };
+				 
+				 }; //TODO: Check view permission of video based on video ownership and sharing
                  case (#create) { ?() };
                  case (#admin) { null };
                  case (#update) {
