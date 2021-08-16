@@ -2,6 +2,19 @@
   "canisters": {
     "CanCan": {
       "main": "service/CanCan.mo"
+    },
+	"cancan_ui": {
+      "dependencies": [
+        "CanCan"
+      ],
+      "frontend": {
+        "entrypoint": "src/index.tsx"
+      },
+      "type": "assets",
+      "source": [
+        "build",
+        "public"
+      ]
     }
   },
   "defaults": {
