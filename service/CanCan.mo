@@ -23,6 +23,9 @@ import Nat32 "mo:base/Nat32";
 import Time "mo:base/Time";
 import TrieMap "mo:base/TrieMap";
 import Types "../backend/Types";
+import Sha256 "mo:sha256/SHA256";
+import Nat8 "mo:base/Nat8";
+import Char "mo:base/Char";
 
 shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = this {
 
@@ -876,6 +879,24 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
       };
       buf.toArray()
     }
+  };
+  
+  func createHash(phrase : Text) : Text {
+    var a: [Nat8] = [];
+    for (c in phrase.chars()) {
+        let word: Nat8 = Nat8.fromNat(Nat32.toNat(Char.toNat32(c)));
+        a := Array.append(a, [word]);
+    };
+
+    var bh: [Nat8] = [];
+    bh :=  Sha256.sha256(a);
+
+    var out: Text = "";
+    for (w in Iter.fromArray(bh)) {
+        out := Text.concat(out, Nat8.toText(w));
+    };
+
+    return out;
   };
   
   func createVideoHash(caller : ?UserId, videoId : VideoId) : Text {

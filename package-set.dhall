@@ -24,6 +24,11 @@ let
       , repo = "git@github.com:dfinity/motoko-bigmap.git"
       , version = "master"
       , dependencies = ["base", "SHA256"]
+      },
+      { name = "sha256"
+      , repo = "https://github.com/enzoh/motoko-sha"
+      , version = "master"
+      , dependencies = [] : List Text
       }
     ]
 
