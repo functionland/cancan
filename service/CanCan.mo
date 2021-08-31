@@ -851,12 +851,21 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
   };
   
   //public function to add video to album
-  public shared(msg) func addVideo2Album(albums : ?[Text], videoId : VideoId) : async ?() {
-	do ? {
-		accessCheck(msg.caller, #update, #video videoId)!;
-		Debug.print("accessCheck succeeded for Adding video to album");
-		addVideo2Album_(albums, videoId)
-	};
+  public shared(msg) func addVideo2Album(albums : ?[Text], videoId : VideoId) : async () {
+		let access = accessCheck(msg.caller, #update, #video videoId);
+		if(access != null){
+			Debug.print("accessCheck succeeded for Adding video to album");
+			let a_ : ?() = addVideo2Album_(albums, videoId);
+			switch(a_){
+				case null {
+					()
+				};
+				case (?a__){
+					()
+				};
+			};
+		};
+		()
   };
   
   //internal function to create an album
@@ -869,13 +878,24 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
   //public function to create an album
   public shared(msg) func createAlbum(albums : ?[Text]) : async ?[Text] {
 	do ? {
-		accessCheck(msg.caller, #update, #video videoId)!;
+		var createdAlbums : [Text] = [];
+		accessCheck(msg.caller, #view, #pubView)!;
 		Debug.print("accessCheck succeeded for creating album");
-		let a_ : Bool = createAlbum_(album, userId);
-		if(a_){
-		
+		switch (albums){
+			case null {
+				null!
+			};
+			case (?_albums){
+				for (album in _albums.vals()) {
+					let a_ : Bool = createAlbum_(album, Principal.toText(msg.caller));
+					if(a_){
+						createdAlbums := Array.append(createdAlbums, [album]);
+					};
+				};
+			};
 		};
-	};
+		createdAlbums
+	}
   };
 
   // internal function for adding metadata
