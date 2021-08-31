@@ -160,7 +160,7 @@ module {
 	/// relationship between external ids and video ids.
     vidoesExternalId : Map<Text, Types.VideoId>;
 	
-	/// relationship between external ids and album names.
+	/// relationship between video ids and album names.
     vidoesAlbumName : Rel<Text, Types.VideoId>;
 
     /// all video pictures (aka thumbnails).
@@ -171,6 +171,9 @@ module {
 
     /// likes relation: relates profiles and videos.
     likes : Rel<Types.UserId, Types.VideoId>;
+	
+	/// albums relation: relates albums and user.
+    albums : Rel<Types.UserId, Text>;
 	
 	videoHash : Rel<Types.VideoId, Text>;
 	
@@ -217,6 +220,8 @@ module {
 
     /// likes relation: relates profiles and videos.
     likes : RelShared<Types.UserId, Types.VideoId>;
+	
+	albums : RelShared<Types.UserId, Text>;
 
     /// uploaded relation: relates profiles and videos.
     uploaded : RelShared<Types.UserId, Types.VideoId>;
@@ -250,10 +255,6 @@ module {
 	uploadedFrom: ?Types.UploadOrigin;
   };
   
-  // Album
-  public type Album = {
-	name: Text;
-  };
 
   public func empty (init : { admin : Principal }) : State {
     let equal = (Text.equal, Text.equal);
@@ -273,6 +274,7 @@ module {
       videoPics = TrieMap.TrieMap<Types.VideoId, Types.VideoPic>(Text.equal, Text.hash);
       follows = RelObj.RelObj(hash, equal);
       likes = RelObj.RelObj(hash, equal);
+	  albums = RelObj.RelObj(hash, equal);
 	  sharedVideos = RelObj.RelObj(hash, equal);
 	  videoHash = RelObj.RelObj(hash, equal);
       superLikes = RelObj.RelObj(hash, equal);

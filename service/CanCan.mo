@@ -849,6 +849,34 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 		};
 	}
   };
+  
+  //public function to add video to album
+  public shared(msg) func addVideo2Album(albums : ?[Text], videoId : VideoId) : async ?() {
+	do ? {
+		accessCheck(msg.caller, #update, #video videoId)!;
+		Debug.print("accessCheck succeeded for Adding video to album");
+		addVideo2Album_(albums, videoId)
+	};
+  };
+  
+  //internal function to create an album
+  func createAlbum_(album : Text, userId: UserId) : Bool {
+		Debug.print("Creating album");
+		state.albums.put(album, userId);
+		true
+  };
+  
+  //public function to create an album
+  public shared(msg) func createAlbum(albums : ?[Text]) : async ?[Text] {
+	do ? {
+		accessCheck(msg.caller, #update, #video videoId)!;
+		Debug.print("accessCheck succeeded for creating album");
+		let a_ : Bool = createAlbum_(album, userId);
+		if(a_){
+		
+		};
+	};
+  };
 
   // internal function for adding metadata
   func createVideo_(i : VideoInit) : ?VideoId {
@@ -1157,6 +1185,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
       state.videoPics.get(videoId)!
     }
   };
+  
 
   public shared(msg) func putVideoInfo(videoId : VideoId, videoInit : VideoInit) : async ?() {
     do ? {
