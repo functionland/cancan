@@ -42,6 +42,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
   public type VideoPic = Types.VideoPic;
   public type VideoResult = Types.VideoResult;
   public type VideoResults = Types.VideoResults;
+  public type AlbumInfo = Types.AlbumInfo;
 
   var state = State.empty({ admin = initPrincipal });
 
@@ -689,6 +690,11 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
                              tags = vinfo.tags ;
                              name = vinfo.name ;
                              chunkCount = vinfo.chunkCount ;
+							 lastModifiedAt = vinfo.lastModifiedAt ;
+							 geoData = vinfo.geoData ;
+							 geoDataExif = vinfo.geoDataExif ;
+							 people = vinfo.people ;
+							 uploadedFrom = vinfo.uploadedFrom ;
                          });
         /*
         state.eventLog.add({time=now;
@@ -820,6 +826,29 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
       putProfileFollow_(userId, toFollow, follows)!
     }
   };
+  
+  // internal function for adding video to an album
+  func addVideo2Album_(albums : ?[Text], videoId : VideoId) : ?() {
+	do ? {
+		switch(albums) {
+			case null {
+				null!
+			};
+			case (?albs) {
+				for (alb in albs.vals()){
+					let doesLinkExists = state.vidoesAlbumName.isMember(alb, videoId);
+					if(doesLinkExists) {
+					
+					} else {
+						state.vidoesAlbumName.put(alb, videoId);
+						
+					};
+				};
+				()
+			};
+		};
+	}
+  };
 
   // internal function for adding metadata
   func createVideo_(i : VideoInit) : ?VideoId {
@@ -831,25 +860,31 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
     case null { /* ok, not taken yet. */
 			Debug.print ("videoId is available");
 			state.vidoesExternalId.put(i.externalId, videoId);
+			let t_ : ?() = addVideo2Album_(i.album, videoId);
             state.videos.put(videoId,
-                            {
-                              videoId = videoId;
-							  externalId = i.externalId;
-                              userId = i.userId ;
-                              name = i.name ;
-                              createdAt = i.createdAt ;
-                              uploadedAt = now ;
-                              viralAt = null ;
-                              caption =  i.caption ;
-                              chunkCount = i.chunkCount ;
-                              tags = i.tags ;
-                              viewCount = 0 ;
-                            });
+                {
+                    videoId = videoId;
+					externalId = i.externalId;
+                    userId = i.userId ;
+                    name = i.name ;
+                    createdAt = i.createdAt ;
+                    uploadedAt = now ;
+                    viralAt = null ;
+                    caption =  i.caption ;
+                    chunkCount = i.chunkCount ;
+					tags = i.tags ;
+					viewCount = 0 ;
+					lastModifiedAt = i.lastModifiedAt;
+					geoData = i.geoData;
+					geoDataExif = i.geoDataExif;
+					people = i.people;
+					uploadedFrom = i.uploadedFrom;
+			});
 			Debug.print ("videos is put");
-           state.uploaded.put(i.userId, videoId);
-		   Debug.print ("uploaded is put " # i.userId);
-           logEvent(#createVideo({info = i}));
-           ?videoId
+			state.uploaded.put(i.userId, videoId);
+			Debug.print ("uploaded is put " # i.userId);
+			logEvent(#createVideo({info = i}));
+			?videoId
          };
     }
   };
@@ -1084,6 +1119,12 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
         viewCount = v.viewCount ;
         name = v.name ;
         chunkCount = v.chunkCount ;
+		lastModifiedAt = v.lastModifiedAt;
+		geoData = v.geoData;
+		geoDataExif = v.geoDataExif;
+		people = v.people;
+		uploadedFrom = v.uploadedFrom;
+		album = ?state.vidoesAlbumName.get1(videoId);
         // This implementation makes public all users who flagged every video,
         // but if that information should be kept private, get video info
         // could return just whether the calling user flagged it.
@@ -1123,22 +1164,28 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
       let i = videoInit ;
       let v = state.videos.get(videoId)!;
 	  state.vidoesExternalId.put(v.externalId, videoId);
+	  let _t : ?() = addVideo2Album_(i.album, videoId);
       state.videos.put(videoId,
-                       {
-                         // some fields are "immutable", regardless of caller data:
-                         userId = v.userId ;
-						 externalId = v.externalId;
-                         uploadedAt = v.uploadedAt ;
-                         viewCount = v.viewCount ;
-                         videoId = videoId ;
-                         // -- above uses old data ; below is from caller --
-                         createdAt = i.createdAt ;
-                         viralAt = null;
-                         caption = i.caption ;
-                         tags = i.tags ;
-                         name = i.name ;
-                         chunkCount = i.chunkCount ;
-                       })
+                    {
+                        // some fields are "immutable", regardless of caller data:
+                        userId = v.userId ;
+						externalId = v.externalId;
+                        uploadedAt = v.uploadedAt ;
+                        viewCount = v.viewCount ;
+                        videoId = videoId ;
+                        // -- above uses old data ; below is from caller --
+                        createdAt = i.createdAt ;
+                        viralAt = null;
+                        caption = i.caption ;
+                        tags = i.tags ;
+                        name = i.name ;
+                        chunkCount = i.chunkCount ;
+						lastModifiedAt = i.lastModifiedAt;
+						geoData = i.geoData;
+						geoDataExif = i.geoDataExif;
+						people = i.people;
+						uploadedFrom = i.uploadedFrom;
+                    })
     }
   };
 
@@ -1240,13 +1287,22 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
       };
       for ((u, v) in videos.vals()) {
         let _ = createVideo_(
-          {userId = u ;
-		   externalId = "" ;
-           name = v ;
-           createdAt = timeNow_() ;
-           chunkCount = 0;
-           caption = "";
-           tags = [ ];})!;
+          {
+			userId = u ;
+			externalId = "" ;
+			name = v ;
+			createdAt = timeNow_() ;
+			chunkCount = 0;
+			caption = "";
+			tags = [ ];
+			lastModifiedAt = null ;
+			geoData = null ;
+			geoDataExif = null ;
+			people = null ;
+			uploadedFrom = null ;
+			album = null ;
+		   })!;
+		   
       };
     }
   };

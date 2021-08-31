@@ -159,6 +159,9 @@ module {
 	
 	/// relationship between external ids and video ids.
     vidoesExternalId : Map<Text, Types.VideoId>;
+	
+	/// relationship between external ids and album names.
+    vidoesAlbumName : Rel<Text, Types.VideoId>;
 
     /// all video pictures (aka thumbnails).
     videoPics : Map<Types.VideoId, Types.VideoPic>;
@@ -240,6 +243,16 @@ module {
     viewCount: Nat;
     name: Text;
     chunkCount: Nat;
+	lastModifiedAt: ?Types.Timestamp;
+	geoData: ?Types.GeoData;
+	geoDataExif: ?Types.GeoData;
+	people: ?Types.People;
+	uploadedFrom: ?Types.UploadOrigin;
+  };
+  
+  // Album
+  public type Album = {
+	name: Text;
   };
 
   public func empty (init : { admin : Principal }) : State {
@@ -263,6 +276,7 @@ module {
 	  sharedVideos = RelObj.RelObj(hash, equal);
 	  videoHash = RelObj.RelObj(hash, equal);
       superLikes = RelObj.RelObj(hash, equal);
+	  vidoesAlbumName = RelObj.RelObj(hash, equal);
       uploaded = uploaded_;
       eventLog = SeqObj.Seq<Event.Event>(Event.equal, null);
       var eventCount = 0;

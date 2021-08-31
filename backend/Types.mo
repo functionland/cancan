@@ -96,6 +96,31 @@ public type UserAllowances = {
   superLikes : AllowanceBalance ;
 };
 
+/// Geo data info
+public type GeoData = {
+ latitude: Text;
+ longitude: Text;
+ altitude: Text;
+ latitudeSpan: Text;
+ longitudeSpan: Text;
+};
+
+/// People tagged in the media info
+public type Person = {
+ name: Text;
+};
+public type People = [Person];
+public type AlbumInfo = {
+ name: Text
+};
+
+/// Origin of uploaded photo
+public type UploadOrigin = {
+ localFolderName: Text;
+ deviceType: Text;
+ url: Text;
+};
+
 /// video information provided by front end to service, upon creation.
 public type VideoInit = {
  userId : UserId;
@@ -105,6 +130,12 @@ public type VideoInit = {
  caption: Text;
  tags: [Text];
  chunkCount: Nat;
+ lastModifiedAt: ?Timestamp;
+ geoData: ?GeoData;
+ geoDataExif: ?GeoData;
+ people: ?People;
+ uploadedFrom: ?UploadOrigin;
+ album: ?[Text];
 };
 
 /// video information provided by service to front end views -- Pic is separate query
@@ -115,6 +146,12 @@ public type VideoInfo = {
  pic: ?VideoPic;
  createdAt : Timestamp;
  uploadedAt : Timestamp;
+ lastModifiedAt: ?Timestamp;
+ geoData: ?GeoData;
+ geoDataExif: ?GeoData;
+ people: ?People;
+ uploadedFrom: ?UploadOrigin;
+ album: ?[Text];
  viralAt: ?Timestamp;
  caption: Text;
  tags: [Text];
