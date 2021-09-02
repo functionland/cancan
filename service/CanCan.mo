@@ -858,7 +858,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
   };
   
   // internal function for adding video to an album
-  func addVideo2Album_(albums : ?[Text], videoId : VideoId) : ?() {
+  func addVideo2Album_(albums : ?[Text], videoId : VideoId, userId: UserId) : ?() {
 	do ? {
 		switch(albums) {
 			case null {
@@ -866,12 +866,18 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 			};
 			case (?albs) {
 				for (alb in albs.vals()){
-					let doesLinkExists = state.vidoesAlbumName.isMember(alb, videoId);
-					if(doesLinkExists) {
-					
-					} else {
-						state.vidoesAlbumName.put(alb, videoId);
+					let albumExists = state.albums.isMember(userId, alb);
+					if(albumExists){
+						let doesLinkExists = state.vidoesAlbumName.isMember(alb, videoId);
+						if(doesLinkExists) {
 						
+						} else {
+							state.vidoesAlbumName.put(alb, videoId);
+							
+						};
+					} else {
+						let aa_ : Bool = createAlbum_(alb, userId);
+						state.vidoesAlbumName.put(alb, videoId);
 					};
 				};
 				()
@@ -885,7 +891,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 		let access = accessCheck(msg.caller, #update, #video videoId);
 		if(access != null){
 			Debug.print("accessCheck succeeded for Adding video to album");
-			let a_ : ?() = addVideo2Album_(albums, videoId);
+			let a_ : ?() = addVideo2Album_(albums, videoId, userId);
 			switch(a_){
 				case null {
 					()
@@ -938,7 +944,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
     case null { /* ok, not taken yet. */
 			Debug.print ("videoId is available");
 			state.vidoesExternalId.put(i.externalId, videoId);
-			let t_ : ?() = addVideo2Album_(i.album, videoId);
+			let t_ : ?() = addVideo2Album_(i.album, videoId, i.userId);
             state.videos.put(videoId,
                 {
                     videoId = videoId;
@@ -1243,7 +1249,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
       let i = videoInit ;
       let v = state.videos.get(videoId)!;
 	  state.vidoesExternalId.put(v.externalId, videoId);
-	  let _t : ?() = addVideo2Album_(i.album, videoId);
+	  let _t : ?() = addVideo2Album_(i.album, videoId, v.userId);
       state.videos.put(videoId,
                     {
                         // some fields are "immutable", regardless of caller data:
