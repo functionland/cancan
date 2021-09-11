@@ -183,6 +183,7 @@ module {
                                };
                           case (#video v) {
                                  let users = init.uploaded.get1(v);
+								 Debug.print(debug_show("accessCheck started for update video", v, users));
                                  switch (users.size()) {
                                  case 1 { if (userPrincipal.isMember(users[0], caller_)) {
                                             ?()
