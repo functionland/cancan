@@ -946,6 +946,15 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 			Debug.print ("videoId is available");
 			state.vidoesExternalId.put(i.externalId, videoId);
 			let t_ : ?() = addVideo2Album_(i.album, videoId, i.userId);
+			var _viewCount : Nat = 0;
+			switch (i.viewCount) {
+				case null {
+					
+				};
+				case (?_vc) {
+					_viewCount := _vc;
+				};
+			};
             state.videos.put(videoId,
                 {
                     videoId = videoId;
@@ -958,7 +967,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
                     caption =  i.caption ;
                     chunkCount = i.chunkCount ;
 					tags = i.tags ;
-					viewCount = 0 ;
+					viewCount = _viewCount ;
 					lastModifiedAt = i.lastModifiedAt;
 					geoData = i.geoData;
 					geoDataExif = i.geoDataExif;
@@ -1387,6 +1396,7 @@ shared ({caller = initPrincipal}) actor class CanCan () /* : Types.Service */ = 
 			people = null ;
 			uploadedFrom = null ;
 			album = null ;
+			viewCount = ?0;
 		   })!;
 		   
       };

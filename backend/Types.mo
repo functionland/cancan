@@ -136,6 +136,7 @@ public type VideoInit = {
  people: ?People;
  uploadedFrom: ?UploadOrigin;
  album: ?[Text];
+ viewCount: ?Nat;
 };
 
 /// video information provided by service to front end views -- Pic is separate query
