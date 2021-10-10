@@ -111,7 +111,11 @@ public type Person = {
 };
 public type People = [Person];
 public type AlbumInfo = {
- name: Text
+ name: Text;
+ //description: ?Text;
+ //access: ?Text;
+ //date: ?Timestamp;
+ //geoData: ?GeoData;
 };
 
 /// Origin of uploaded photo
